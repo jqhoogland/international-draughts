@@ -2,7 +2,7 @@ from checkers.types import tilelist
 from checkers.utils import tile_index_of, TileIndexError
 
 
-def draw_board(tiles: tilelist(str)):
+def draw_board(tiles: tilelist(str), *, width: int = 2):
     """A helper that prints a checkerboard that draws elements from ``tiles``
     to a board according to the international checkers standard tile ordering.
 
@@ -17,7 +17,7 @@ def draw_board(tiles: tilelist(str)):
             try:
                 board_repr += f"{tiles(tile_index_of(i, j) - 1)}|"
             except TileIndexError:
-                board_repr += "  |"
+                board_repr += " " * width + "|"
 
         board_repr += "\n"
 

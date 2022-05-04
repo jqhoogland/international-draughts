@@ -16,7 +16,7 @@ from contextlib import suppress
 
 from checkers.models import Move, Board
 from checkers.utils import col_of, row_of, tile_index_of, TileIndexError
-from checkers.rules import is_x_rows_forward, is_x_cols_away, is_diagonal, is_occupied
+from checkers.rules import is_x_rows_forward, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step
 
 
 def test_tile_index_to_row_index():
@@ -78,11 +78,40 @@ def test_is_occupied():
 
 
 def test_modify_move():
-    assert False
+    assert Move(18, 12) + 1 == Move(18, 7)
+    assert Move(18, 13) + 1 == Move(18, 9)
+    assert Move(18, 23) + 1 == Move(18, 29)
+    assert Move(18, 22) + 1 == Move(18, 27)
+
+    assert Move(18, 7) - 1 == Move(18, 12)
+    assert Move(18, 9) - 1 == Move(18, 13)
+    assert Move(18, 29) - 1 == Move(18, 23)
+    assert Move(18, 27) - 1 == Move(18, 22)
 
 
-def test_cannot_move_normally_into_occupied_square():
-    assert False
+def test_is_valid_normal_step_if_empty():
+    assert is_valid_normal_step(Board([28], []), Move(28, 22))
+    assert is_valid_normal_step(Board([28], []), Move(28, 23))
+
+
+def test_is_not_valid_normal_step_if_backwards():
+    assert not is_valid_normal_step(Board([28], []), Move(28, 33))
+    assert not is_valid_normal_step(Board([28], []), Move(28, 32))
+
+
+def test_is_not_valid_normal_step_if_horizontal():
+    assert not is_valid_normal_step(Board([28], []), Move(28, 37))
+    assert not is_valid_normal_step(Board([28], []), Move(28, 29))
+
+
+def test_is_not_valid_normal_step_if_more_than_one():
+    assert not is_valid_normal_step(Board([28], []), Move(28, 17))
+    assert not is_valid_normal_step(Board([28], []), Move(28, 17))
+
+
+def test_is_not_valid_normal_step_if_occupied():
+    assert not is_valid_normal_step(Board([28, 22], []), Move(28, 22))
+    assert not is_valid_normal_step(Board([28], [23]), Move(28, 23))
 
 
 def test_cannot_move_with_capture_into_occupied_square():
