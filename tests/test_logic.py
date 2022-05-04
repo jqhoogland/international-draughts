@@ -14,9 +14,9 @@
 import itertools
 from contextlib import suppress
 
-from checkers.models import Move
+from checkers.models import Move, Board
 from checkers.utils import col_of, row_of, tile_index_of, TileIndexError
-from checkers.rules import is_x_rows_forward, is_x_cols_away, is_diagonal
+from checkers.rules import is_x_rows_forward, is_x_cols_away, is_diagonal, is_occupied
 
 
 def test_tile_index_to_row_index():
@@ -54,18 +54,44 @@ def test_is_diagonal():
                    is (abs(i1-i2) == abs(j1-j2))
 
 
+def test_is_occupied():
+    import numpy as np
+
+    def split_list(ls: list, ratio: float = 0.5):
+        """Source: https://stackoverflow.com/a/32409742/1701415"""
+        return zip(*map(lambda x: np.split(
+            np.random.permutation(x),
+            [int(ratio*len(x))]), ls))
+
+    locations = range(1, 51)
+    occupied, empty = split_list(locations, 0.25)
+    p1, p2 = split_list(occupied, 0.5)
+
+    for p in p1:
+        assert is_occupied(Board(p1, p2), p)
+
+    for p in p2:
+        assert is_occupied(Board(p1, p2), p)
+
+    for p in empty:
+        assert not is_occupied(Board(p1, p2), p)
+
+
+def test_modify_move():
+    assert False
+
 
 def test_cannot_move_normally_into_occupied_square():
-    pass
+    assert False
 
 
 def test_cannot_move_with_capture_into_occupied_square():
-    pass
+    assert False
 
 
 def test_cannot_move_normally_backwards():
-    pass
+    assert False
 
 
 def test_can_move_with_capture_backwards():
-    pass
+    assert False
