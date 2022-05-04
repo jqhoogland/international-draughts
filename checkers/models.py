@@ -1,6 +1,15 @@
 from dataclasses import dataclass
-from pydantic import pydantic, conint
+from typing import NamedTuple
+
+from pydantic import conint
 from enum import Enum
+
+from checkers.types import TileIndex
+
+
+class Move(NamedTuple):
+    start: TileIndex
+    end: TileIndex
 
 
 class Status(str, Enum):
@@ -9,14 +18,12 @@ class Status(str, Enum):
     EMPTY = "EMPTY"
 
 
-@pydantic
 class Tile:
     x: conint(gt=0, lt=10)
     y: conint(gt=0, lt=10)
     status: Status
 
 
-@pydantic
 class Board:
-
+    pass
 
