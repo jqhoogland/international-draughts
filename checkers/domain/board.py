@@ -5,7 +5,8 @@ from typing import Optional
 from pydantic import validate_arguments
 
 from checkers.domain.move import Move, capture_series_to_moves
-from checkers.domain.piece import TileIndex, Piece
+from checkers.domain.piece import Piece
+from checkers.utils import TileIndex
 from checkers.domain.player import PLAYER_ONE, PLAYER_TWO
 
 
@@ -47,6 +48,12 @@ class Board:
         except StopIteration:
             self.pieces.append(tile)
 
+    def replace(self, p: Piece):
+        """Insert a ``tile`` at the position ``tile.idx`` to replace an
+        existing piece."""
+        self.pop(p.idx)
+        self.insert(p)
+
     def apply_step(self, move: Move) -> 'Board':
         """Apply the given step to a board, maintaining the list of pieces in
         the order of their notation.
@@ -68,24 +75,7 @@ class Board:
         self.pieces = [p for p in self.pieces if p.idx not in visited_idxs]
         self.insert(Piece(moves[-1].end, starting_tile.player, starting_tile.is_king))
 
-        print(starting_tile, moves)
-
         return self
-
-    def apply(self, cmd: str):
-        if match := re.search(r"(\d{1,2})\-(\d{1,2})", cmd):
-            start, end = match.group(1), match.group(2)
-            move = Move(int(start), int(end))
-
-            # TODO: Validation
-            return self.apply_step(move)
-
-        elif idxs := list(map(int, cmd.split("x"))):
-            # TODO: Validation
-            moves = capture_series_to_moves(idxs)
-            return self.apply_captures(moves)
-            
-        raise InvalidMoveFormat(f"Couldn't parse the given move '{cmd}'")
 
     @validate_arguments
     def __init__(self, p1_pieces: list[TileIndex], p2_pieces: list[TileIndex], *,

@@ -15,8 +15,8 @@ import itertools
 from contextlib import suppress
 
 from checkers.domain import Move, Board
-from checkers.utils import col_of, row_of, tile_index_of, TileIndexError
-from checkers.rules import is_x_rows_up, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step, \
+from checkers.utils import tile_index_of, TileIndexError
+from checkers.validation import is_x_rows_up, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step, \
     is_valid_normal_capture
 
 
@@ -64,6 +64,7 @@ def test_is_occupied():
 
     for p in empty:
         assert not is_occupied(Board(p1, p2), p)
+
 
 def test_p1_is_valid_normal_step_if_empty():
     assert is_valid_normal_step(Board([28], []), Move(28, 22))

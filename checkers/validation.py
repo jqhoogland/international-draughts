@@ -1,8 +1,18 @@
+"""
+This could use a bit of a refactor:
+- Instead of predicate tests, raise InvalidMoveError's so you can provide
+  players more informative feedback.
+- Many of these should be "private" (as close as you can get with Python)
+- Possibly, group them together into a ``Rules`` class. That said, I prefer
+  leaning towards excess functional programming over excess OO.
+
+"""
+
 from typing import Optional
 
 from checkers.domain import Move, Board, Player
-from checkers.domain.piece import TileIndex
-from checkers.utils import col_of, row_of
+from checkers.domain.move import InvalidMoveError
+from checkers.utils import col_of, row_of, TileIndex
 
 
 def is_x_rows_up(move: Move, *, rows: int = 1) -> bool:
@@ -26,6 +36,11 @@ def is_diagonal(move: Move) -> bool:
            == abs(row_of(move.start) - row_of(move.end))
 
 
+def is_perp(move: Move) -> bool:
+    return col_of(move.start) == col_of(move.end) \
+           or row_of(move.start) == row_of(move.end)
+
+
 def is_x_steps_on_diagonal(move: Move, *, steps: int = 1) -> bool:
     return is_x_rows_away(move, rows=steps) \
            and is_x_cols_away(move, cols=steps)
@@ -35,10 +50,10 @@ def is_x_steps_on_diagonal(move: Move, *, steps: int = 1) -> bool:
 
 
 def is_one_step_forward(board: Board, move: Move) -> bool:
-    direction = -1 if board[move.start].player else 1
+    direction = 1 if board[move.start].player else -1
 
     return is_x_rows_up(move, rows=direction) \
-           and is_x_cols_away(move, cols=1)
+        and is_x_cols_away(move, cols=1)
 
 
 def is_two_steps_away(move: Move) -> bool:
@@ -52,7 +67,7 @@ def is_occupied(board: Board, i: TileIndex, *, by: Optional[Player] = None) -> b
     the player specified by this argument.
     """
     for (j, player, _) in board:
-        if i == j and (not by or by == player):
+        if i == j and (by is None or by == player):
             return True
 
     return False
@@ -65,37 +80,27 @@ def is_valid_normal_step(board: Board, move: Move) -> bool:
     return is_one_step_forward(board, move) and not is_occupied(board, move.end)
 
 
-def is_valid_normal_capture(board: Board, move: Move) -> bool:
-    player = board[move.start].player
+def is_valid_normal_capture(board: Board, move: Move, *, player: Optional[Player]) -> bool:
+    if player is None:
+        player = board[move.start].player
 
     return is_two_steps_away(move) \
-           and is_occupied(board, move - 1, by=not player) \
+           and is_occupied(board, (move - 1).end, by=not player) \
            and not is_occupied(board, move.end)
 
 
-def is_valid_normal_move(board: Board, move: Move) -> bool:
-    return is_valid_normal_step(board, move) \
-           or is_valid_normal_capture(board, move)
-
-
 def is_valid_king_step(board: Board, move: Move) -> bool:
-    raise NotImplementedError
-    return is_diagonal(move) and all(map(lambda i: not is_occupied(board, i), move))
+    return (is_diagonal(move) or is_perp(move)) \
+           and all(map(lambda i: not is_occupied(board, i) or i == move.start, move) )
 
 
-def is_valid_king_capture(board: Board, move: Move) -> bool:
-    player = board[move.start].player
+def is_valid_king_capture(board: Board, move: Move, *, player: Optional[Player]) -> bool:
+    if player is None:
+        player = board[move.start].player
 
-    raise NotImplementedError
-    return is_diagonal(move) \
-           and all(map(lambda i: not is_occupied(board, i, by=player), move)) \
+    return (is_diagonal(move) or is_perp(move)) \
+           and all(map(lambda i: not is_occupied(board, i, by=player) or i == move.start, move)) \
            and sum(map(lambda i: int(is_occupied(board, i, by=not player)), move)) == 1
-
-
-def is_valid_king_move(board: Board, move: Move) -> bool:
-    raise NotImplementedError
-    return is_valid_king_step(board, move) \
-           or is_valid_king_capture(board, move)
 
 
 # -- Capture Series
@@ -104,11 +109,10 @@ def is_valid_king_move(board: Board, move: Move) -> bool:
 def is_valid_normal_capture_series(board: Board, moves: list[Move]) -> bool:
     """Assumes moves is already validated for continuity. We keep track of a
     list of captured tiles for recursive calls to avoid capturing the same piece twice."""
-
     captured: list[TileIndex] = []
 
     for move in moves:
-        if not is_valid_normal_capture(board, move) \
+        if not is_valid_normal_capture(board, move, player=board[moves[0].start].player) \
                 or (capture := (move - 1).end) in captured:
             return False
         captured.append(capture)
@@ -117,16 +121,40 @@ def is_valid_normal_capture_series(board: Board, moves: list[Move]) -> bool:
 
 
 def is_valid_king_capture_series(board: Board, moves: list[Move]) -> bool:
-    raise NotImplementedError
+    """See ``is_valid_normal_capture_series``."""
     captured: list[TileIndex] = []
 
     def get_capture(move: Move) -> TileIndex:
-        return next(filter(lambda i: i in board.pieces, move))
+        idxs = (p.idx for p in board.pieces)
+        return next(filter(lambda i: i in idxs, move))
 
     for move in moves:
-        if not is_valid_king_capture(board, move) \
+        if not is_valid_king_capture(board, move, player=board[moves[0].start].player) \
                 or (capture := get_capture(move)) in captured:
             return False
         captured.append(capture)
 
     return True
+
+
+def is_valid_step(board: Board, move: Move):
+    return is_valid_king_step(board, move) \
+        if board[move.start].is_king \
+        else is_valid_normal_step(board, move)
+
+
+def validate_step(board: Board, move: Move):
+    if not is_valid_step(board, move):
+        raise InvalidMoveError("This is not a valid step.")
+
+
+def is_valid_capture_series(board: Board, moves: list[Move]):
+    return is_valid_king_capture_series(board, moves) \
+        if board[moves[0].start].is_king \
+        else is_valid_normal_capture_series(board, moves)
+
+
+def validate_captures(board: Board, moves: list[Move]):
+    if not is_valid_capture_series(board, moves):
+        raise InvalidMoveError("This is not a valid step.")
+

@@ -4,7 +4,17 @@ from pydantic.types import conlist
 from checkers.utils import tile_index_of, TileIndexError
 
 
-def draw_grid(tiles: conlist(str, min_items=50, max_items=50), *, width: int = 2):
+PLAYER_ONE_NORMAL = "⊂⊃"
+PLAYER_ONE_KING = "⊆⊇"
+
+PLAYER_TWO_NORMAL = "<>"
+PLAYER_TWO_KING = "≤≥"
+
+LIGHT_EMPTY = "  "
+DARK_EMPTY = "[]"
+
+
+def draw_grid(tiles: conlist(str, min_items=50, max_items=50)):
     """A helper that prints a checkerboard that draws elements from ``tiles``
     to a board according to the international checkers standard tile ordering.
 
@@ -19,7 +29,7 @@ def draw_grid(tiles: conlist(str, min_items=50, max_items=50), *, width: int = 2
             try:
                 board_repr += f"{tiles[tile_index_of(i, j) - 1]}|"
             except TileIndexError:
-                board_repr += " " * width + "|"
+                board_repr += LIGHT_EMPTY + "|"
 
         board_repr += "\n"
 
@@ -27,21 +37,19 @@ def draw_grid(tiles: conlist(str, min_items=50, max_items=50), *, width: int = 2
 
 
 def draw_board(board: Board):
-    piece_reprs = ["  "] * 50
+    piece_reprs = [DARK_EMPTY] * 50
 
     for i, player, is_king in sorted(board, key=lambda p: p.idx):
         if player is PLAYER_ONE:
-            piece_reprs[i-1] = "X" + ("X" if is_king else "_")
+            piece_reprs[i-1] = PLAYER_ONE_KING if is_king else PLAYER_ONE_NORMAL
         else:
-            piece_reprs[i-1] = "O" + ("O" if is_king else "_")
+            piece_reprs[i-1] = PLAYER_TWO_KING if is_king else PLAYER_TWO_NORMAL
 
-    return draw_grid(piece_reprs, width=2)
+    return draw_grid(piece_reprs)
 
 
 def add_edges(board_repr: str):
     """Add labels to the edges of an board.
-
-    .. NOTE:: This only works with width-2 grids.
     """
 
     top_indices = "  .  .01.  .02.  .03.  .04.  .05.\n"

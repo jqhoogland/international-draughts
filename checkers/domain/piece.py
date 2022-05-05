@@ -1,13 +1,21 @@
 from typing import NamedTuple
 
-from pydantic.types import conint
-
 from checkers.domain.player import Player
-
-TileIndex = conint(ge=1, le=50)
+from checkers.utils import row_of, TileIndex
 
 
 class Piece(NamedTuple):
     idx: TileIndex
     player: Player
     is_king: bool
+
+    @property
+    def has_reached_end(self) -> bool:
+        return (self.player and row_of(self.idx) == 0) \
+            or (not self.player and row_of(self.idx) == 9)
+
+    def coronate(self) -> 'Piece':
+        return Piece(self.idx, self.player, True)
+
+
+

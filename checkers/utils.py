@@ -3,8 +3,6 @@ from typing import Literal
 from pydantic import validate_arguments
 from pydantic.types import conint
 
-from checkers.domain.piece import TileIndex
-
 
 class TileIndexError(ValueError):
     pass
@@ -12,6 +10,8 @@ class TileIndexError(ValueError):
 
 RowIndex = conint(ge=0, lt=10)
 ColIndex = conint(ge=0, lt=10)
+
+TileIndex = conint(ge=1, le=50)
 
 
 @validate_arguments

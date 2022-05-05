@@ -1,5 +1,6 @@
-
+from checkers.domain.move import InvalidMoveError
 from checkers.draw import draw_tile_indices, draw_board_with_indices
+from checkers.game import Game
 from checkers.io.sample import sample_game_cmd_generator
 from checkers.setup import default_board
 
@@ -19,15 +20,15 @@ def main():
 
     """
 
-    board = default_board()
-
+    game = Game()
     cmd_generator = std_input_cmd_generator()
 
     try:
         while True:
             print("\n\n" + "-" * 80 + "\n\n")
-            print(draw_board_with_indices(board))
+            print(draw_board_with_indices(game.board))
             print("\n")
+
             turn_idx, cmd = next(cmd_generator)
 
             if cmd == "\\i":  # Show indexes
@@ -37,7 +38,12 @@ def main():
                 print("Showing a sample game...")
                 cmd_generator = sample_game_cmd_generator()
             else:
-                board.apply(cmd)
+
+                try:
+                    game.play(cmd)
+                except InvalidMoveError as e:
+                    print(str(e) + " Please try again")
+                    raise
 
     except StopIteration:
         print("\nThanks for playing!")
