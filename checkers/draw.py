@@ -1,9 +1,11 @@
-from checkers.models import Board, PLAYER_ONE
-from checkers.types import tilelist
+from checkers.domain import Board, PLAYER_ONE
+from pydantic.types import conlist
+
+from checkers.domain.board import tilelist
 from checkers.utils import tile_index_of, TileIndexError
 
 
-def draw_grid(tiles: tilelist(str), *, width: int = 2):
+def draw_grid(tiles: conlist(str, min_items=50, max_items=50), *, width: int = 2):
     """A helper that prints a checkerboard that draws elements from ``tiles``
     to a board according to the international checkers standard tile ordering.
 

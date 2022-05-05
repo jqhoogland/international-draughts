@@ -1,8 +1,6 @@
-import re
 
-from checkers.draw import draw_board, draw_tile_indices, draw_board_with_indices
+from checkers.draw import draw_tile_indices, draw_board_with_indices
 from checkers.io.sample import sample_game_cmd_generator
-from checkers.models import Move
 from checkers.setup import default_board
 
 
@@ -38,18 +36,12 @@ def main():
             elif cmd == "\\s":  # Show sample
                 print("Showing a sample game...")
                 cmd_generator = sample_game_cmd_generator()
+            else:
+                board.apply(cmd)
 
-            if match := re.search(r"(\d{1,2})\-(\d{1,2})", cmd):
-                start, end = match.group(1), match.group(2)
-                move = Move(int(start), int(end))
-
-                # TODO: Validation
-                board.apply_move(move)
-
-            elif cmd.split("x"):
-                print("Capture")
     except StopIteration:
         print("\nThanks for playing!")
+
 
 if __name__ == "__main__":
     main()

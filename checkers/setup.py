@@ -1,4 +1,4 @@
-from checkers.models import Board
+from checkers.domain.board import Board
 
 
 def default_board() -> Board:

@@ -14,22 +14,10 @@
 import itertools
 from contextlib import suppress
 
-from checkers.models import Move, Board
+from checkers.domain import Move, Board
 from checkers.utils import col_of, row_of, tile_index_of, TileIndexError
 from checkers.rules import is_x_rows_forward, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step, \
     is_valid_normal_capture
-
-
-def test_tile_index_to_row_index():
-    for i, j in itertools.product(*itertools.repeat(range(10), 2)):
-        with suppress(TileIndexError):
-            assert row_of(tile_index_of(i, j)) == i
-
-
-def test_tile_index_to_col_index():
-    for i, j in itertools.product(*itertools.repeat(range(10), 2)):
-        with suppress(TileIndexError):
-            assert col_of(tile_index_of(i, j)) == j
 
 
 def test_is_forward():

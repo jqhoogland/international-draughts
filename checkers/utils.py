@@ -1,10 +1,15 @@
 from pydantic import validate_arguments
+from pydantic.types import conint
 
-from checkers.types import ColIndex, RowIndex, TileIndex
+from checkers.domain.board import TileIndex
 
 
 class TileIndexError(ValueError):
     pass
+
+
+RowIndex = conint(ge=0, lt=10)
+ColIndex = conint(ge=0, lt=10)
 
 
 @validate_arguments

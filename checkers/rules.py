@@ -1,7 +1,7 @@
 from typing import Optional
 
-from checkers.models import Move, Board, Player
-from checkers.types import TileIndex
+from checkers.domain import Move, Board, Player
+from checkers.domain.board import TileIndex
 from checkers.utils import col_of, row_of
 
 
