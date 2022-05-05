@@ -1,21 +1,12 @@
 import re
 from dataclasses import dataclass
-from typing import NamedTuple, Optional
+from typing import Optional
 
 from pydantic import validate_arguments
-from pydantic.types import conint
 
 from checkers.domain.move import Move, capture_series_to_moves
-from checkers.domain.player import PLAYER_ONE, PLAYER_TWO, Player
-
-
-TileIndex = conint(ge=1, le=50)
-
-
-class Piece(NamedTuple):
-    idx: TileIndex
-    player: Player
-    is_king: bool
+from checkers.domain.piece import TileIndex, Piece
+from checkers.domain.player import PLAYER_ONE, PLAYER_TWO
 
 
 class BoardError(ValueError):
@@ -28,25 +19,33 @@ class InvalidMoveFormat(ValueError):
 
 @dataclass(init=False)
 class Board:
+    """Player one moves up. Player two moves down."""
+
     pieces: list[Piece]
+
+    def _get_list_idx(self, idx: TileIndex) -> int:
+        try:
+            return next(filter(
+                lambda i_p: i_p[1].idx == idx, enumerate(self.pieces)))[0]
+        except StopIteration:
+            raise IndexError(f"No tile with index '{idx}' found on board.") from None
 
     def pop(self, idx: TileIndex) -> Piece:
         """Remove and return the tile at the position ``idx``,
         according to international checkers notation, *not*
         the pythonic index of an element in ``pieces``.
         """
-
-        i_start, _ = next(enumerate(filter(
-            lambda p: p.idx == idx, self.pieces)))
-
-        return self.pieces.pop(i_start)
+        return self.pieces.pop(self._get_list_idx(idx))
 
     def insert(self, tile: Piece):
         """Insert a ``tile`` at the position ``tile.idx``. See ``pop``"""
-        i_end, _ = next(enumerate(filter(
-            lambda p: p.idx > tile.idx, self.pieces)))
+        try:
+            i_end, _ = next(filter(
+                lambda i_p: i_p[1].idx > tile.idx, enumerate(self.pieces)))
 
-        self.pieces.insert(i_end, tile)
+            self.pieces.insert(i_end, tile)
+        except StopIteration:
+            self.pieces.append(tile)
 
     def apply_step(self, move: Move) -> 'Board':
         """Apply the given step to a board, maintaining the list of pieces in
@@ -59,7 +58,6 @@ class Board:
               Board instead.
         """
         starting_tile = self.pop(move.start)
-        self.pieces = [p for p in self.pieces if p.idx not in move]
         self.insert(Piece(move.end, starting_tile.player, starting_tile.is_king))
 
         return self
@@ -69,6 +67,8 @@ class Board:
         visited_idxs = [p for move in moves for p in move]
         self.pieces = [p for p in self.pieces if p.idx not in visited_idxs]
         self.insert(Piece(moves[-1].end, starting_tile.player, starting_tile.is_king))
+
+        print(starting_tile, moves)
 
         return self
 
@@ -88,7 +88,8 @@ class Board:
         raise InvalidMoveFormat(f"Couldn't parse the given move '{cmd}'")
 
     @validate_arguments
-    def __init__(self, p1_pieces: list[TileIndex], p2_pieces: list[TileIndex], *, kings: Optional[list[TileIndex]] = None):
+    def __init__(self, p1_pieces: list[TileIndex], p2_pieces: list[TileIndex], *,
+                 kings: Optional[list[TileIndex]] = None):
         """
         Prepare a board by providing a list of indices of pieces for players 1 and 2.
 
@@ -114,3 +115,7 @@ class Board:
 
     def __iter__(self):
         return iter(self.pieces)
+
+    def __getitem__(self, idx: TileIndex):
+        return self.pieces[self._get_list_idx(idx)]
+

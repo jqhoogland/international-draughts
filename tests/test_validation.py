@@ -16,7 +16,7 @@ from contextlib import suppress
 
 from checkers.domain import Move, Board
 from checkers.utils import col_of, row_of, tile_index_of, TileIndexError
-from checkers.rules import is_x_rows_forward, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step, \
+from checkers.rules import is_x_rows_up, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step, \
     is_valid_normal_capture
 
 
@@ -24,7 +24,7 @@ def test_is_forward():
     for i1, j1, i2, j2 in itertools.product(*itertools.repeat(range(10), 4)):
         for rows in range(3):
             with suppress(TileIndexError):
-                assert is_x_rows_forward(Move(tile_index_of(i2, j2), tile_index_of(i1, j1)), rows=rows) \
+                assert is_x_rows_up(Move(tile_index_of(i2, j2), tile_index_of(i1, j1)), rows=rows) \
                        is (rows == i2-i1)
 
 
@@ -65,63 +65,96 @@ def test_is_occupied():
     for p in empty:
         assert not is_occupied(Board(p1, p2), p)
 
-
-def test_modify_move():
-    assert Move(18, 12) + 1 == Move(18, 7)
-    assert Move(18, 13) + 1 == Move(18, 9)
-    assert Move(18, 23) + 1 == Move(18, 29)
-    assert Move(18, 22) + 1 == Move(18, 27)
-
-    assert Move(18, 7) - 1 == Move(18, 12)
-    assert Move(18, 9) - 1 == Move(18, 13)
-    assert Move(18, 29) - 1 == Move(18, 23)
-    assert Move(18, 27) - 1 == Move(18, 22)
-
-
-def test_is_valid_normal_step_if_empty():
+def test_p1_is_valid_normal_step_if_empty():
     assert is_valid_normal_step(Board([28], []), Move(28, 22))
     assert is_valid_normal_step(Board([28], []), Move(28, 23))
 
 
-def test_is_not_valid_normal_step_if_backwards():
+def test_p1_is_not_valid_normal_step_if_backwards():
     assert not is_valid_normal_step(Board([28], []), Move(28, 33))
     assert not is_valid_normal_step(Board([28], []), Move(28, 32))
 
 
-def test_is_not_valid_normal_step_if_horizontal():
+def test_p1_is_not_valid_normal_step_if_horizontal():
     assert not is_valid_normal_step(Board([28], []), Move(28, 37))
     assert not is_valid_normal_step(Board([28], []), Move(28, 29))
 
 
-def test_is_not_valid_normal_step_if_more_than_one():
+def test_p1_is_not_valid_normal_step_if_more_than_one():
     assert not is_valid_normal_step(Board([28], []), Move(28, 17))
     assert not is_valid_normal_step(Board([28], []), Move(28, 17))
 
 
-def test_is_not_valid_normal_step_if_occupied():
+def test_p1_is_not_valid_normal_step_if_occupied():
     assert not is_valid_normal_step(Board([28, 22], []), Move(28, 22))
     assert not is_valid_normal_step(Board([28], [23]), Move(28, 23))
 
 
-def test_is_valid_capture_if_end_is_empty():
+def test_p1_is_valid_capture_if_end_is_empty():
     assert is_valid_normal_capture(Board([28], [22]), Move(28, 17))
     assert is_valid_normal_capture(Board([28], [23]), Move(28, 19))
     assert is_valid_normal_capture(Board([28], [33]), Move(28, 39))
     assert is_valid_normal_capture(Board([28], [32]), Move(28, 37))
 
 
-def test_is_not_valid_capture_if_jumping_own_piece():
+def test_p1_is_not_valid_capture_if_jumping_own_piece():
     assert not is_valid_normal_capture(Board([28, 22], []), Move(28, 17))
     assert not is_valid_normal_capture(Board([28, 23], []), Move(28, 19))
     assert not is_valid_normal_capture(Board([28, 33], []), Move(28, 39))
     assert not is_valid_normal_capture(Board([28, 32], []), Move(28, 37))
 
 
-def test_is_not_valid_capture_if_end_is_occupied():
+def test_p1_is_not_valid_capture_if_end_is_occupied():
     assert not is_valid_normal_capture(Board([28, 17], [22]), Move(28, 17))
     assert not is_valid_normal_capture(Board([28], [23, 19]), Move(28, 19))
     assert not is_valid_normal_capture(Board([28, 39], [33]), Move(28, 39))
     assert not is_valid_normal_capture(Board([28], [32, 37]), Move(28, 37))
+
+
+def test_p2_is_valid_normal_step_if_empty():
+    assert is_valid_normal_step(Board([], [28]), Move(28, 33))
+    assert is_valid_normal_step(Board([], [28]), Move(28, 32))
+
+
+def test_p2_is_not_valid_normal_step_if_backwards():
+    assert not is_valid_normal_step(Board([], [28]), Move(28, 22))
+    assert not is_valid_normal_step(Board([], [28]), Move(28, 23))
+
+
+def test_p2_is_not_valid_normal_step_if_horizontal():
+    assert not is_valid_normal_step(Board([], [28]), Move(28, 37))
+    assert not is_valid_normal_step(Board([], [28]), Move(28, 29))
+
+
+def test_p2_is_not_valid_normal_step_if_more_than_one():
+    assert not is_valid_normal_step(Board([], [28]), Move(28, 17))
+    assert not is_valid_normal_step(Board([], [28]), Move(28, 17))
+
+
+def test_p2_is_not_valid_normal_step_if_occupied():
+    assert not is_valid_normal_step(Board([], [28, 22]), Move(28, 22))
+    assert not is_valid_normal_step(Board([23], [28]), Move(28, 23))
+
+
+def test_p2_is_valid_capture_if_end_is_empty():
+    assert is_valid_normal_capture(Board([22], [28]), Move(28, 17))
+    assert is_valid_normal_capture(Board([23], [28]), Move(28, 19))
+    assert is_valid_normal_capture(Board([33], [28]), Move(28, 39))
+    assert is_valid_normal_capture(Board([32], [28]), Move(28, 37))
+
+
+def test_p2_is_not_valid_capture_if_jumping_own_piece():
+    assert not is_valid_normal_capture(Board([], [28, 22]), Move(28, 17))
+    assert not is_valid_normal_capture(Board([], [28, 23]), Move(28, 19))
+    assert not is_valid_normal_capture(Board([], [28, 33]), Move(28, 39))
+    assert not is_valid_normal_capture(Board([], [28, 32]), Move(28, 37))
+
+
+def test_p2_is_not_valid_capture_if_end_is_occupied():
+    assert not is_valid_normal_capture(Board([22], [28, 17]), Move(28, 17))
+    assert not is_valid_normal_capture(Board([23, 19], [28]), Move(28, 19))
+    assert not is_valid_normal_capture(Board([33], [28, 39]), Move(28, 39))
+    assert not is_valid_normal_capture(Board([32, 37], [28]), Move(28, 37))
 
 
 def test_cannot_move_with_capture_into_occupied_square():

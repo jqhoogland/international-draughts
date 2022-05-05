@@ -1,11 +1,11 @@
 from typing import Optional
 
 from checkers.domain import Move, Board, Player
-from checkers.domain.board import TileIndex
+from checkers.domain.piece import TileIndex
 from checkers.utils import col_of, row_of
 
 
-def is_x_rows_forward(move: Move, *, rows: int = 1) -> bool:
+def is_x_rows_up(move: Move, *, rows: int = 1) -> bool:
     return row_of(move.start) - row_of(move.end) == rows
 
 
@@ -34,8 +34,10 @@ def is_x_steps_on_diagonal(move: Move, *, steps: int = 1) -> bool:
 # Aliases for understandability
 
 
-def is_one_step_forward(move: Move) -> bool:
-    return is_x_rows_forward(move, rows=1) \
+def is_one_step_forward(board: Board, move: Move) -> bool:
+    direction = -1 if board[move.start].player else 1
+
+    return is_x_rows_up(move, rows=direction) \
            and is_x_cols_away(move, cols=1)
 
 
@@ -60,18 +62,20 @@ def is_occupied(board: Board, i: TileIndex, *, by: Optional[Player] = None) -> b
 # All of these functions assume there is a valid piece in the starting position of move.
 
 def is_valid_normal_step(board: Board, move: Move) -> bool:
-    return is_one_step_forward(move) and not is_occupied(board, move.end)
+    return is_one_step_forward(board, move) and not is_occupied(board, move.end)
 
 
-def is_valid_normal_capture(board: Board, move: Move, player: Player) -> bool:
+def is_valid_normal_capture(board: Board, move: Move) -> bool:
+    player = board[move.start].player
+
     return is_two_steps_away(move) \
-           and is_occupied(board, move - 1, not player) \
+           and is_occupied(board, move - 1, by=not player) \
            and not is_occupied(board, move.end)
 
 
-def is_valid_normal_move(board: Board, move: Move, player: Player) -> bool:
+def is_valid_normal_move(board: Board, move: Move) -> bool:
     return is_valid_normal_step(board, move) \
-           or is_valid_normal_capture(board, move, player)
+           or is_valid_normal_capture(board, move)
 
 
 def is_valid_king_step(board: Board, move: Move) -> bool:
@@ -79,30 +83,32 @@ def is_valid_king_step(board: Board, move: Move) -> bool:
     return is_diagonal(move) and all(map(lambda i: not is_occupied(board, i), move))
 
 
-def is_valid_king_capture(board: Board, move: Move, player: Player) -> bool:
+def is_valid_king_capture(board: Board, move: Move) -> bool:
+    player = board[move.start].player
+
     raise NotImplementedError
     return is_diagonal(move) \
            and all(map(lambda i: not is_occupied(board, i, by=player), move)) \
            and sum(map(lambda i: int(is_occupied(board, i, by=not player)), move)) == 1
 
 
-def is_valid_king_move(board: Board, move: Move, player: Player) -> bool:
+def is_valid_king_move(board: Board, move: Move) -> bool:
     raise NotImplementedError
     return is_valid_king_step(board, move) \
-           or is_valid_king_capture(board, move, player)
+           or is_valid_king_capture(board, move)
 
 
 # -- Capture Series
 
 
-def is_valid_normal_capture_series(board: Board, moves: list[Move], player: Player) -> bool:
+def is_valid_normal_capture_series(board: Board, moves: list[Move]) -> bool:
     """Assumes moves is already validated for continuity. We keep track of a
     list of captured tiles for recursive calls to avoid capturing the same piece twice."""
 
     captured: list[TileIndex] = []
 
     for move in moves:
-        if not is_valid_normal_capture(board, move, player) \
+        if not is_valid_normal_capture(board, move) \
                 or (capture := (move - 1).end) in captured:
             return False
         captured.append(capture)
@@ -110,7 +116,7 @@ def is_valid_normal_capture_series(board: Board, moves: list[Move], player: Play
     return True
 
 
-def is_valid_king_capture_series(board: Board, moves: list[Move], player: Player) -> bool:
+def is_valid_king_capture_series(board: Board, moves: list[Move]) -> bool:
     raise NotImplementedError
     captured: list[TileIndex] = []
 
@@ -118,7 +124,7 @@ def is_valid_king_capture_series(board: Board, moves: list[Move], player: Player
         return next(filter(lambda i: i in board.pieces, move))
 
     for move in moves:
-        if not is_valid_king_capture(board, move, player) \
+        if not is_valid_king_capture(board, move) \
                 or (capture := get_capture(move)) in captured:
             return False
         captured.append(capture)

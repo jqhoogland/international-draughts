@@ -1,7 +1,9 @@
+from typing import Literal
+
 from pydantic import validate_arguments
 from pydantic.types import conint
 
-from checkers.domain.board import TileIndex
+from checkers.domain.piece import TileIndex
 
 
 class TileIndexError(ValueError):
@@ -16,6 +18,19 @@ ColIndex = conint(ge=0, lt=10)
 def tile_index_of(i: RowIndex, j: ColIndex) -> TileIndex:
     if (i + j) % 2 != 1:
         raise TileIndexError("The provided row and column index a non-playable (light) tile")
+
+    return 1 + i * 5 + (j // 2)
+
+
+@validate_arguments
+def floor_tile_index_of(
+        i: RowIndex, j: ColIndex,
+        *, direction: tuple[Literal[1, 0, -1], Literal[1, 0, -1]]) -> TileIndex:
+    """Unlike ``tile_index_of``, fallback to an adjacent tile if we specify a
+    non-playable (light) tile. Which adjacent tile is specified by ``direction``."""
+
+    if (i + j) % 2 != 1:
+        return 1 + ((i + direction[0]) * 5) + ((j + direction[1]) // 2)
 
     return 1 + i * 5 + (j // 2)
 

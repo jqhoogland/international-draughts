@@ -1,7 +1,6 @@
 from checkers.domain import Board, PLAYER_ONE
 from pydantic.types import conlist
 
-from checkers.domain.board import tilelist
 from checkers.utils import tile_index_of, TileIndexError
 
 
@@ -48,7 +47,7 @@ def add_edges(board_repr: str):
     top_indices = "  .  .01.  .02.  .03.  .04.  .05.\n"
     bottom_indices = "'46'  '47'  '48'  '49'  '50'  '"
     left_indices = "\n  \n06\n  \n16\n  \n26\n  \n36\n  \n46\n  \n  \n"
-    right_indices = "\n  \n05  \n  \n15\n  \n25\n  \n35\n  \n45\n  \n  \n  \n"
+    right_indices = "\n05  \n  \n15\n  \n25\n  \n35\n  \n45\n  \n  \n  \n  \n"
 
     split_lines = zip(left_indices.split("\n"), \
                   (top_indices + board_repr + bottom_indices).split("\n"), \

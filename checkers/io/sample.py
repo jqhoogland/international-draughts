@@ -53,8 +53,11 @@ SAMPLE_GAME = """01.32-28 19-23
 45.22-17 29x49
 46.17x06 49x27
 47.06-01 27-31
-48.01x15 31x34
+48.01x05 31x34
 49.35-30"""
+
+# 48 was a typo (it said 01x15). I took the liberty to provide a possible
+# correction.
 
 
 def sample_game_cmd_generator():
