@@ -1,7 +1,7 @@
 from typing import Optional
 
 from checkers.models import Move, Board, Player
-from checkers.types import RowIndex, TileIndex, ColIndex
+from checkers.types import TileIndex
 from checkers.utils import col_of, row_of
 
 
@@ -75,16 +75,19 @@ def is_valid_normal_move(board: Board, move: Move, player: Player) -> bool:
 
 
 def is_valid_king_step(board: Board, move: Move) -> bool:
+    raise NotImplementedError
     return is_diagonal(move) and all(map(lambda i: not is_occupied(board, i), move))
 
 
 def is_valid_king_capture(board: Board, move: Move, player: Player) -> bool:
+    raise NotImplementedError
     return is_diagonal(move) \
            and all(map(lambda i: not is_occupied(board, i, by=player), move)) \
            and sum(map(lambda i: int(is_occupied(board, i, by=not player)), move)) == 1
 
 
 def is_valid_king_move(board: Board, move: Move, player: Player) -> bool:
+    raise NotImplementedError
     return is_valid_king_step(board, move) \
            or is_valid_king_capture(board, move, player)
 
@@ -108,6 +111,7 @@ def is_valid_normal_capture_series(board: Board, moves: list[Move], player: Play
 
 
 def is_valid_king_capture_series(board: Board, moves: list[Move], player: Player) -> bool:
+    raise NotImplementedError
     captured: list[TileIndex] = []
 
     def get_capture(move: Move) -> TileIndex:

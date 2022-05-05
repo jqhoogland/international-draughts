@@ -8,7 +8,7 @@
 
 ### Starting position
 - **The Board**: The game is played on a 10 x 10 "checkered" grid (starting with a dark tile on the bottom left).
-- **Piece Placement**: Pieces are allowed only on dark tiles. Players start with 20 of their pieces filling the dark tiles in their four closest rows.
+- **Piece Placement**: Board are allowed only on dark tiles. Players start with 20 of their pieces filling the dark tiles in their four closest rows.
 
 ### Movement
 - Ordinary pieces move one square diagonally forward.

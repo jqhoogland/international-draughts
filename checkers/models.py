@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from typing import NamedTuple, Optional, Literal, Iterator, Union
+from typing import NamedTuple, Optional, Literal, Iterator
 
-from pydantic import conint, validate_arguments
-from enum import Enum, Flag, auto
+from pydantic import validate_arguments
 
 from checkers.types import TileIndex
 from checkers.utils import col_of, row_of, tile_index_of
@@ -76,24 +75,6 @@ class Move(NamedTuple):
             yield step.end
 
 
-@dataclass(init=False)
-class CaptureSeries:
-    moves: list[Move]
-
-    def __init__(self, idxs: list[TileIndex]):
-        """Given a series of tile indices, convert into a series of moves.
-
-        More or less like [1, 3, 5] -> [(1, 3), (3, 5)]
-
-        """
-
-        moves = []
-        for start, end in zip(idxs[:-1], idxs[1:]):
-            moves.append(Move(start, end))
-
-        self.moves = moves
-
-
 PLAYER_ONE = True
 PLAYER_TWO = False
 
@@ -113,6 +94,43 @@ class BoardError(ValueError):
 @dataclass(init=False)
 class Board:
     pieces: list[Tile]
+
+    def pop(self, idx: TileIndex) -> Tile:
+        """Remove and return the tile at the position ``idx``,
+        according to international checkers notation, *not*
+        the pythonic index of an element in ``pieces``.
+        """
+
+        i_start, _ = next(enumerate(filter(
+            lambda p: p.idx == idx, self.pieces)))
+
+        return self.pieces.pop(i_start)
+
+    def insert(self, tile: Tile):
+        """Insert a ``tile`` at the position ``tile.idx``. See ``pop``"""
+        i_end, _ = next(enumerate(filter(
+            lambda p: p.idx > tile.idx, self.pieces)))
+
+        self.pieces.insert(i_end, tile)
+
+    def apply_move(self, move: Move) -> 'Board':
+        """Apply the given move to a board, maintaining the list of pieces in
+        the order of their notation.
+
+        .. NOTE:: This assumes you've validated the move beforehand. It simply
+           clears all of the tiles in the range of path.
+
+        TODO: This defies immutability. Consider returning a new instance of
+              Board instead.
+        """
+        starting_tile = self.pop(move.start)
+        self.pieces = [p for p in self.pieces if p.idx not in move]
+        self.insert(Tile(move.end, starting_tile.player, starting_tile.is_king))
+
+        return self
+
+    def apply_all(self, moves: list[Move]) -> 'Board':
+        pass
 
     @validate_arguments
     def __init__(self, p1_pieces: list[TileIndex], p2_pieces: list[TileIndex], *, kings: Optional[list[TileIndex]] = None):

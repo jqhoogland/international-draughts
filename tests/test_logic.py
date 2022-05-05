@@ -16,7 +16,8 @@ from contextlib import suppress
 
 from checkers.models import Move, Board
 from checkers.utils import col_of, row_of, tile_index_of, TileIndexError
-from checkers.rules import is_x_rows_forward, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step
+from checkers.rules import is_x_rows_forward, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step, \
+    is_valid_normal_capture
 
 
 def test_tile_index_to_row_index():
@@ -112,6 +113,27 @@ def test_is_not_valid_normal_step_if_more_than_one():
 def test_is_not_valid_normal_step_if_occupied():
     assert not is_valid_normal_step(Board([28, 22], []), Move(28, 22))
     assert not is_valid_normal_step(Board([28], [23]), Move(28, 23))
+
+
+def test_is_valid_capture_if_end_is_empty():
+    assert is_valid_normal_capture(Board([28], [22]), Move(28, 17))
+    assert is_valid_normal_capture(Board([28], [23]), Move(28, 19))
+    assert is_valid_normal_capture(Board([28], [33]), Move(28, 39))
+    assert is_valid_normal_capture(Board([28], [32]), Move(28, 37))
+
+
+def test_is_not_valid_capture_if_jumping_own_piece():
+    assert not is_valid_normal_capture(Board([28, 22], []), Move(28, 17))
+    assert not is_valid_normal_capture(Board([28, 23], []), Move(28, 19))
+    assert not is_valid_normal_capture(Board([28, 33], []), Move(28, 39))
+    assert not is_valid_normal_capture(Board([28, 32], []), Move(28, 37))
+
+
+def test_is_not_valid_capture_if_end_is_occupied():
+    assert not is_valid_normal_capture(Board([28, 17], [22]), Move(28, 17))
+    assert not is_valid_normal_capture(Board([28], [23, 19]), Move(28, 19))
+    assert not is_valid_normal_capture(Board([28, 39], [33]), Move(28, 39))
+    assert not is_valid_normal_capture(Board([28], [32, 37]), Move(28, 37))
 
 
 def test_cannot_move_with_capture_into_occupied_square():
