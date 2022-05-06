@@ -4,7 +4,6 @@ module of eXtended string functions/constants.
 
 """
 
-
 from math import ceil
 
 HR = "-" * 80

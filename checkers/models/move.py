@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Literal, Iterator
+from typing import Iterator
 
-from checkers.models.position import row_of, col_of, floor_tile_index_of, TileIndex
+from checkers.models.position import row_of, col_of, floor_tile_index_of, TileIndex, tile_index_of
 
 
 class InvalidMoveError(ValueError):
@@ -23,9 +23,22 @@ class Move:
     start: TileIndex
     end: TileIndex
 
+    @property
+    def is_perpendicular(self) -> bool:
+        return self.direction[0] == 0 or self.direction[1] == 0
+
     def unit(self) -> 'Move':
         """The equivalent of a unit vector for a move. Returns a move in the
-        same direction with length-1 (i.e., one step)."""
+        same direction with length-1 (i.e., one step).
+
+        .. NOTE: For a vertical/horizontal move, this step covers two columns.
+        """
+        if self.is_perpendicular:
+            return Move(self.start, tile_index_of(
+                row_of(self.start) + self.direction[0] * 2,
+                col_of(self.start) + self.direction[1] * 2
+            ))
+
         return self // len(self)
 
     def inverse(self) -> 'Move':
@@ -75,8 +88,8 @@ class Move:
         row_len = abs(row_of(self.end) - row_of(self.start))
         col_len = abs(col_of(self.end) - col_of(self.start))
 
-        if row_len != col_len and not (row_len == 0 or col_len == 0):
-            raise InvalidMoveError("This move is off-diagonal. No cheating.")
+        if row_len != col_len and not self.is_perpendicular:
+            raise InvalidMoveError("This move is off-axis. No cheating.")
 
         return max(row_len, col_len)
 
@@ -113,14 +126,16 @@ class Move:
 
         yield self.start
 
-        step = self.unit()
+        move = self.unit()
 
-        while row_of(step.end) != row_of(self.end) \
-                and col_of(step.end) != col_of(self.end):
-            yield step.end
-            step = step + 1
+        step = 2 if self.is_perpendicular else 1
 
-        yield step.end
+        while (row_of(move.end) != row_of(self.end) or not self.direction[0]) \
+                and (col_of(move.end) != col_of(self.end) or not self.direction[1]):
+            yield move.end
+            move = move + step
+
+        yield move.end
 
 
 def capture_series_to_moves(idx: list[TileIndex]) -> list[Move]:

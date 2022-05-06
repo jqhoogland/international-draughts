@@ -91,7 +91,8 @@ def draw_board_with_indices(board: Board, options: DrawOptions = default_draw_op
     return add_edges(draw_board(board, options=options))
 
 
-def draw_centered_board_with_indices(board: Board, char: str = " ", width: int = 80, options: DrawOptions = default_draw_options):
+def draw_centered_board_with_indices(board: Board, char: str = " ", width: int = 80,
+                                     options: DrawOptions = default_draw_options):
     return center_multiline(draw_board_with_indices(board, options=options), char=char, width=width)
 
 
@@ -101,5 +102,3 @@ def draw_tile_indices(options: DrawOptions = default_draw_options):
     it acts as a test of :func:`tile_index_of` -- see below).
     """
     return draw_grid(list(str(i).zfill(2) for i in range(1, 51)), options=options)
-
-

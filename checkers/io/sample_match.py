@@ -14,6 +14,12 @@
 
 
 --------------------------------------------------------------------------------
+
+There seems to be a mistake in the transcription at turn 48 in that
+the provided attack was not maximal (where the maximal attack would remove the
+31 used in the subsequent move). Who knows what's up.
+
+
 """
 import time
 
@@ -68,7 +74,7 @@ SAMPLE_GAME = """01.32-28 19-23
 45.22-17 29x40x49
 46.17x06 49x27
 47.06-01 27-31
-48.01x29x15 31x48x34
+48.01x29x9x36x16x38x15 31x48x34
 49.35-30 exit"""
 
 TurnIndex = int
@@ -98,9 +104,9 @@ def get_intro() -> str:
     {center_multiline(" Milsjin,W. - Salomé,G. ", char="*")}
     {center_multiline(" Confederation Cup 2000 ", char="*")}
     {center_multiline(wrap_text("Source: https://drive.google.com/file/d/0B2XF"
-                           "f6MWShkeYjU5NzQ1YTQtNGIwMS00ZjRiLWJlNmUtZDQ0M"
-                           "DNiNDE3MDE0/view?hl=en&resourcekey=0-YKq77m5g"
-                           "8Nc1VcLmMpQzcg", width=60))
+                                "f6MWShkeYjU5NzQ1YTQtNGIwMS00ZjRiLWJlNmUtZDQ0M"
+                                "DNiNDE3MDE0/view?hl=en&resourcekey=0-YKq77m5g"
+                                "8Nc1VcLmMpQzcg", width=60))
     }
     
     {HR}
@@ -124,7 +130,7 @@ def main():
     game = Game()
 
     print(get_intro())
-    time.sleep(2)
+    time.sleep(1)
 
     for turn_idx, (p1_move, p2_move) in sample_game_cmd_generator():
         print(draw_centered_board_with_indices(game.board))

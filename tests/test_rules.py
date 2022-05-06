@@ -149,14 +149,3 @@ def test_p2_is_not_valid_capture_if_end_is_occupied():
     assert not is_valid_normal_capture(Board([33], [28, 39]), Move(28, 39))
     assert not is_valid_normal_capture(Board([32, 37], [28]), Move(28, 37))
 
-
-def test_cannot_move_with_capture_into_occupied_square():
-    assert False
-
-
-def test_cannot_move_normally_backwards():
-    assert False
-
-
-def test_can_move_with_capture_backwards():
-    assert False

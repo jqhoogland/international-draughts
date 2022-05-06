@@ -4,6 +4,33 @@
 
 ---
 
+## Get Started
+
+First make sure to install the requirements (preferably in a virtualenv):
+
+```python
+>>> pip install -r requirements.txt
+```
+
+If you want to see a sample game (note: the transcriber seems to have made a mistake at turn 48):
+
+```python
+>>> python checkers/checkers/sample_match.py
+```
+
+If you want to play (PVP alternating input):
+
+```python
+>>> python checkers/checkers/repl.py
+```
+
+## Philosophy
+
+The code's mostly functional (i.e., it tries to avoid mutability and delegates side-effects to an `io` module).
+It tends to avoid objects/classes with a few exceptions (especially to make use of python's nifty special methods).
+
+---
+
 ## Rules
 
 ### Starting position

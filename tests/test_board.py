@@ -2,6 +2,14 @@ from checkers.models import Piece, Board, PLAYER_ONE, PLAYER_TWO
 from checkers.models.position import floor_tile_index_of
 
 
+def test_board_contains():
+    b = Board([28, 29, 15], [18, 1, 9], kings=[29, 1])
+
+    for p in b._pieces:
+        assert p in b
+        assert p.idx in b
+
+
 def test_board_pop():
     b = Board([28, 29, 15], [18, 1, 9], kings=[29, 1])
 

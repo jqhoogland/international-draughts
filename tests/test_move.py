@@ -33,6 +33,9 @@ def test_iter_move():
     assert tuple(Move(1, 45)) == (1, 7, 12, 18, 23, 29, 34, 40, 45)
     assert tuple(Move(45, 1)) == tuple(reversed((1, 7, 12, 18, 23, 29, 34, 40, 45)))
 
+    assert tuple(Move(46, 16)) == (46, 36, 26, 16)
+    assert tuple(Move(49, 46)) == (49, 48, 47, 46)
+
 
 def test_normal_step():
     assert Board([32], []).apply_step(Move(32, 28)) == Board([28], [])
@@ -55,10 +58,4 @@ def test_king_capture():
     assert Board([32, 45, 15], [37, 5, 16], kings=[32]).apply_captures([Move(32, 46)]) == Board([46, 45, 15], [5, 16], kings=[46])
 
 
-def test_normal_captures():
-    assert False
-
-
-def test_king_captures():
-    assert False
 

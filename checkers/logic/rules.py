@@ -7,13 +7,12 @@ This could use a bit of a refactor:
   leaning towards excess functional programming over excess OO.
 
 """
-
 from typing import Optional
 
 from checkers.models import Move, Board, Player
 from checkers.models.move import InvalidMoveError
 from checkers.models.position import col_of, row_of, TileIndex
-from checkers.utils.itertoolsx import first
+from checkers.utils.itertoolsx import first, first_index
 
 
 def is_x_rows_up(move: Move, *, rows: int = 1) -> bool:
@@ -103,12 +102,12 @@ def is_valid_king_capture(board: Board, move: Move, *, player: Optional[Player] 
     if player is None:
         player = board[move.start].player
 
-    return (is_diagonal(move) or is_perp(move)) \
+    return (is_diagonal(move) or is_perp(move) and not is_occupied(board, move.end)) \
            and all(map(lambda i: not is_occupied(board, i, by=player) or i == move.start, move)) \
-           and sum(map(lambda i: is_occupied(board, i, by=not player), move)) == 1
+           and sum(map(lambda i: int(is_occupied(board, i, by=not player)), move)) == 1
 
 
-def get_valid_king_capture(board: Board,  move: Move, *, player: Optional[Player] = None) -> TileIndex:
+def get_valid_king_capture(board: Board, move: Move, *, player: Optional[Player] = None) -> TileIndex:
     return is_valid_king_capture(board, move, player=player) \
            and first(lambda i: is_occupied(board, i, by=not player), move)
 
@@ -127,10 +126,9 @@ def is_valid_normal_capture_series(board: Board, moves: list[Move]) -> bool:
     for move in moves:
         if not is_valid_normal_capture(board, move, player=board[moves[0].start].player) \
                 or (capture := (move - 1).end) in captured:
-            return False
+            yield False
         captured.append(capture)
-
-    return True
+        yield True
 
 
 def is_valid_king_capture_series(board: Board, moves: list[Move]) -> bool:
@@ -144,15 +142,15 @@ def is_valid_king_capture_series(board: Board, moves: list[Move]) -> bool:
         try:
             return next(filter(lambda i: i in idxs, move))
         except StopIteration:
-            return None
+            yield False
 
     for move in moves:
         if not is_valid_king_capture(board, move, player=board[moves[0].start].player) \
                 or (capture := get_capture(move)) in captured:
-            return False
+            yield False
         captured.append(capture)
 
-    return True
+        yield True
 
 
 def is_valid_step(board: Board, move: Move):
@@ -163,15 +161,25 @@ def is_valid_step(board: Board, move: Move):
 
 def validate_step(board: Board, move: Move):
     if not is_valid_step(board, move):
-        raise InvalidMoveError("This is not a valid step.")
+        raise InvalidMoveError(f"'({move.start}, {move.end})' is not a valid step.")
+
+
+def _is_valid_capture_series(board: Board, moves: list[Move]):
+    return (is_valid_king_capture_series(board, moves)
+            if board[moves[0].start].is_king
+            else is_valid_normal_capture_series(board, moves))
 
 
 def is_valid_capture_series(board: Board, moves: list[Move]):
-    return is_valid_king_capture_series(board, moves) \
-        if board[moves[0].start].is_king \
-        else is_valid_normal_capture_series(board, moves)
+    return all(_is_valid_capture_series(board, moves))
+
+
+def get_invalid_capture(board: Board, moves: list[Move]) -> Move:
+    return moves[first_index(lambda e: not e, _is_valid_capture_series(board, moves))]
 
 
 def validate_captures(board: Board, moves: list[Move]):
     if not is_valid_capture_series(board, moves):
-        raise InvalidMoveError("This is not a valid step.")
+        move = get_invalid_capture(board, moves)
+
+        raise InvalidMoveError(f"'({move.start}, {move.end})' is not a valid step.")

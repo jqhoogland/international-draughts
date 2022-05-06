@@ -14,14 +14,13 @@ The secret is in the data structure:
 """
 import functools
 import itertools
-from collections.abc import Collection
-from typing import Optional, Callable, Iterable
+import warnings
+from typing import Callable, Iterable
 
 from pydantic import ValidationError
 
 from checkers.logic.rules import get_valid_normal_capture, get_valid_king_capture
-from checkers.models import Board, Player, Move, Piece, TileIndex
-from checkers.models.board import InvalidMoveError
+from checkers.models import Board, Player, Move, TileIndex
 from checkers.models.position import move_ur, move_dr, TileIndexError, move_u, move_r
 
 
@@ -37,14 +36,14 @@ def get_king_moves():
 def _generate_captures(
         get_tiles: Callable[[], Iterable[TileIndex]],
         get_valid_capture: Callable[[Board, Move, Player], bool],
-        b: Board,
+        board: Board,
         start: TileIndex,
         player: Player,
 ) -> list[TileIndex]:
     for move, amt in get_tiles():
         try:
             end = move(start, amt)
-            if capture := get_valid_capture(b, Move(start, end), player=player):
+            if capture := get_valid_capture(board, Move(start, end), player=player):
                 yield end, capture
 
         except (TileIndexError, ValidationError):
@@ -56,17 +55,17 @@ _generate_king_captures = functools.partial(_generate_captures, get_king_moves, 
 
 
 def _compute_max_capture_abstract(
-    get_next_idxs: Callable[[Board, TileIndex, Player], list[TileIndex]],
-    b: Board,
-    idx: TileIndex,
-    captured: list[TileIndex] = None,
-    max_capture: int = 0,
-    player: Player = None
+        get_next_idxs: Callable[[Board, TileIndex, Player], list[TileIndex]],
+        board: Board,
+        idx: TileIndex,
+        captured: list[TileIndex] = None,
+        max_capture: int = 0,
+        player: Player = None
 ):
     """
     :param get_next_idxs: How to find the next indices (this is the difference
                           between kings and non-kings)
-    :param b:
+    :param board:
     :param idx:
     :param captured: A list of already captured pieces (so we don't end up in
                     loops)
@@ -75,8 +74,7 @@ def _compute_max_capture_abstract(
     captured = captured or []
     _max_capture = max_capture
 
-    print(captured, idx, get_next_idxs(b, idx, player))
-    for next_idx, newly_captured in get_next_idxs(b, idx, player):
+    for next_idx, newly_captured in get_next_idxs(board, idx, player):
         if newly_captured in captured:
             continue
 
@@ -84,7 +82,7 @@ def _compute_max_capture_abstract(
             max_capture,
             _compute_max_capture_abstract(
                 get_next_idxs,
-                b,
+                board,
                 next_idx,
                 captured=[*captured, newly_captured],
                 max_capture=_max_capture + 1,
@@ -122,6 +120,10 @@ def is_max_capture(board: Board, moves: list[Move]) -> bool:
 
 
 def validate_max_capture(board: Board, moves: list[Move]):
-    if not is_max_capture(board, moves):
-        plural = len(moves) > 1 or ''
-        raise InvalidMoveError(f"This {plural and 'series of '}capture{plural and 's'} is not maximal.")
+    max_capture = compute_max_capture(board, board[moves[0].start].player)
+    is_maximal = len(moves) == max_capture
+
+    if not is_maximal:
+        # This isn't perfect and still allows pieces to jump onto other pieces,
+        # but I'm happy for now.
+        warnings.warn(f"{moves} is not maximal ({max_capture}).")

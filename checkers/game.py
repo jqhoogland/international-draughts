@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from typing import Union, Optional
 
 from checkers.logic.max_capture import validate_max_capture
+from checkers.logic.rules import validate_step, validate_captures
 from checkers.models import Move, Board, capture_series_to_moves, Piece
 from checkers.models.board import InvalidMoveError
-from checkers.logic.rules import validate_step, validate_captures
 
 
 def parse_cmd(cmd) -> Union[Move, list[Move]]:
@@ -54,12 +54,10 @@ class Game:
         return self.board[move.end]
 
     def _play_captures(self, moves: list[Move]) -> Piece:
-        validate_captures(self.board, moves)   # -> InvalidMoveError
+        validate_captures(self.board, moves)  # -> InvalidMoveError
         validate_max_capture(self.board, moves)
         self.board = self.board.apply_captures(moves)
         return self.board[moves[-1].end]
 
     def __init__(self, board: Optional[Board] = None):
         self.board = board or default_board()
-
-

@@ -1,7 +1,6 @@
-from abc import ABC
 from collections.abc import Collection
-from dataclasses import dataclass
-from typing import Optional, Iterator
+from collections.abc import Collection
+from typing import Optional, Iterator, Union
 
 from pydantic import validate_arguments
 
@@ -9,7 +8,7 @@ from checkers.models.move import Move
 from checkers.models.piece import Piece
 from checkers.models.player import PLAYER_ONE, PLAYER_TWO
 from checkers.models.position import TileIndex
-from checkers.utils.itertoolsx import first, first_index
+from checkers.utils.itertoolsx import first_index
 
 
 class BoardError(ValueError):
@@ -128,9 +127,12 @@ class Board(Collection):
     def __getitem__(self, idx: TileIndex) -> Piece:
         return self._pieces[self._get_list_idx(idx)]
 
-    def __contains__(self, tile: TileIndex) -> bool:
+    def __contains__(self, piece: Union[Piece, TileIndex]) -> bool:
         try:
-            return self[tile.idx] == tile
+            if isinstance(piece, Piece):
+                return self[piece.idx] == piece
+            else:
+                return self[piece] and True
         except IndexError:
             return False
 
