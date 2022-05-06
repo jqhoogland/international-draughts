@@ -19,7 +19,7 @@ import time
 
 from checkers.models.game import Game
 from checkers.utils.draw import draw_centered_board_with_indices
-from checkers.utils.stringx import wrap_text, center_text, HR
+from checkers.utils.stringx import wrap_text, center_multiline, HR
 
 SAMPLE_GAME = """01.32-28 19-23
 02.28x19 14x23
@@ -93,11 +93,11 @@ def get_intro() -> str:
     
     {HR}
     
-    {center_text("Sample Match")}
+    {center_multiline("Sample Match")}
     
-    {center_text(" Milsjin,W. - Salomé,G. ", char="*")}
-    {center_text(" Confederation Cup 2000 ", char="*")}
-    {center_text(wrap_text("Source: https://drive.google.com/file/d/0B2XF"
+    {center_multiline(" Milsjin,W. - Salomé,G. ", char="*")}
+    {center_multiline(" Confederation Cup 2000 ", char="*")}
+    {center_multiline(wrap_text("Source: https://drive.google.com/file/d/0B2XF"
                            "f6MWShkeYjU5NzQ1YTQtNGIwMS00ZjRiLWJlNmUtZDQ0M"
                            "DNiNDE3MDE0/view?hl=en&resourcekey=0-YKq77m5g"
                            "8Nc1VcLmMpQzcg", width=60))

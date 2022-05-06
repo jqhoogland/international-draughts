@@ -44,17 +44,9 @@ def test_is_diagonal():
 
 
 def test_is_occupied():
-    import numpy as np
-
-    def split_list(ls: list, ratio: float = 0.5):
-        """Source: https://stackoverflow.com/a/32409742/1701415"""
-        return zip(*map(lambda x: np.split(
-            np.random.permutation(x),
-            [int(ratio*len(x))]), ls))
-
-    locations = range(1, 51)
-    occupied, empty = split_list(locations, 0.25)
-    p1, p2 = split_list(occupied, 0.5)
+    p1 = [1, 5, 10, 20]
+    p2 = [50, 45, 40, 30]
+    empty = [i for i in range(1, 51) if i not in p1 and i not in p2]
 
     for p in p1:
         assert is_occupied(Board(p1, p2), p)

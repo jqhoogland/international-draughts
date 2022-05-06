@@ -80,7 +80,7 @@ def is_valid_normal_step(board: Board, move: Move) -> bool:
     return is_one_step_forward(board, move) and not is_occupied(board, move.end)
 
 
-def is_valid_normal_capture(board: Board, move: Move, *, player: Optional[Player]) -> bool:
+def is_valid_normal_capture(board: Board, move: Move, *, player: Optional[Player] = None) -> bool:
     if player is None:
         player = board[move.start].player
 
@@ -94,7 +94,7 @@ def is_valid_king_step(board: Board, move: Move) -> bool:
            and all(map(lambda i: not is_occupied(board, i) or i == move.start, move))
 
 
-def is_valid_king_capture(board: Board, move: Move, *, player: Optional[Player]) -> bool:
+def is_valid_king_capture(board: Board, move: Move, *, player: Optional[Player] = None) -> bool:
     if player is None:
         player = board[move.start].player
 
@@ -125,7 +125,7 @@ def is_valid_king_capture_series(board: Board, moves: list[Move]) -> bool:
     captured: list[TileIndex] = []
 
     def get_capture(move: Move) -> TileIndex:
-        idxs = (p.idx for p in board.pieces)
+        idxs = (p.idx for p in board)
         try:
             return next(filter(lambda i: i in idxs, move))
         except StopIteration:

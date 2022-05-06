@@ -1,5 +1,7 @@
+from abc import ABC
+from collections import Collection
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Iterator
 
 from pydantic import validate_arguments
 
@@ -7,74 +9,27 @@ from checkers.models.move import Move
 from checkers.models.piece import Piece
 from checkers.models.player import PLAYER_ONE, PLAYER_TWO
 from checkers.models.position import TileIndex
+from checkers.utils.itertoolsx import first, first_index
 
 
 class BoardError(ValueError):
     pass
 
 
-class InvalidMoveFormat(ValueError):
+class InvalidMoveError(ValueError):
     pass
 
 
-@dataclass(init=False)
-class Board:
-    """Player one moves up. Player two moves down."""
+class Board(Collection):
+    """Board is a collection for pieces, where pieces are indexed according to
+    their position in standard international draughts format.
 
-    pieces: list[Piece]
+    (For reference: Player one moves up. Player two moves down.)
 
-    def _get_list_idx(self, idx: TileIndex) -> int:
-        try:
-            return next(filter(
-                lambda i_p: i_p[1].idx == idx, enumerate(self.pieces)))[0]
-        except StopIteration:
-            raise IndexError(f"No tile with index '{idx}' found on board.") from None
-
-    def pop(self, idx: TileIndex) -> Piece:
-        """Remove and return the tile at the position ``idx``,
-        according to international checkers notation, *not*
-        the pythonic index of an element in ``pieces``.
-        """
-        return self.pieces.pop(self._get_list_idx(idx))
-
-    def insert(self, tile: Piece):
-        """Insert a ``tile`` at the position ``tile.idx``. See ``pop``"""
-        try:
-            i_end, _ = next(filter(
-                lambda i_p: i_p[1].idx > tile.idx, enumerate(self.pieces)))
-
-            self.pieces.insert(i_end, tile)
-        except StopIteration:
-            self.pieces.append(tile)
-
-    def replace(self, p: Piece):
-        """Insert a ``tile`` at the position ``tile.idx`` to replace an
-        existing piece."""
-        self.pop(p.idx)
-        self.insert(p)
-
-    def apply_step(self, move: Move) -> 'Board':
-        """Apply the given step to a board, maintaining the list of pieces in
-        the order of their notation.
-
-        .. NOTE:: This assumes you've validated the move beforehand. It simply
-           clears all of the tiles in the range of path.
-
-        TODO: This defies immutability. Consider returning a new instance of
-              Board instead.
-        """
-        starting_tile = self.pop(move.start)
-        self.insert(Piece(move.end, starting_tile.player, starting_tile.is_king))
-
-        return self
-
-    def apply_captures(self, moves: list[Move]) -> 'Board':
-        starting_tile = self.pop(moves[0].start)
-        visited_idxs = [p for move in moves for p in move]
-        self.pieces = [p for p in self.pieces if p.idx not in visited_idxs]
-        self.insert(Piece(moves[-1].end, starting_tile.player, starting_tile.is_king))
-
-        return self
+    TODO: This defies immutability. Consider making this immutable (such that
+          the provided methods return new instances).
+    """
+    _pieces: list[Piece]
 
     @validate_arguments
     def __init__(self, p1_pieces: list[TileIndex], p2_pieces: list[TileIndex], *,
@@ -96,14 +51,88 @@ class Board:
 
         kings = kings or []
 
-        self.pieces = list(sorted(
+        self._pieces = list(sorted(
             (*map(lambda i: Piece(i, PLAYER_ONE, i in kings), p1_pieces),
              *map(lambda i: Piece(i, PLAYER_TWO, i in kings), p2_pieces)),
             key=lambda t: t.idx
         ))
 
-    def __iter__(self):
-        return iter(self.pieces)
+    def apply_step(self, move: Move) -> 'Board':
+        """Apply the given step to a board, maintaining the list of pieces in
+        the order of their notation.
 
-    def __getitem__(self, idx: TileIndex):
-        return self.pieces[self._get_list_idx(idx)]
+        .. NOTE:: This assumes you've validated the move beforehand. It simply
+           clears all of the tiles in the range of path.
+        """
+        self.insert(
+            self.pop(move.start)
+                .position(move.end)
+        )
+
+        return self
+
+    def apply_captures(self, moves: list[Move]) -> 'Board':
+        """Apply a (series of) capture(s) to the board.
+
+        .. NOTE:: This assumes you've validated the moves beforehand (also for
+           continuity). It simply clears all of the tiles in the range of path.
+        """
+
+        starting_tile = self.pop(moves[0].start)
+        visited_idxs = [i for move in moves for i in move]
+        self._pieces = [p for p in self if p.idx not in visited_idxs]
+        self.insert(starting_tile.position(moves[-1].end))
+
+        return self
+
+    # -- Methods inspired by list() -------------------------------------------
+
+    def _get_list_idx(self, idx: TileIndex) -> int:
+        ls_idx = first_index(lambda p: p.idx == idx, self)
+
+        if ls_idx == -1:
+            raise IndexError(f"No tile with index '{idx}' found on board.") from None
+
+        return ls_idx
+
+    def pop(self, idx: TileIndex) -> Piece:
+        """Remove and return the tile at the position ``idx``,
+        according to international checkers notation, *not*
+        the pythonic index of an element in ``pieces``.
+        """
+        return self._pieces.pop(self._get_list_idx(idx))
+
+    def insert(self, tile: Piece):
+        """Insert a ``tile`` at the position ``tile.idx``. See ``pop``"""
+        ls_idx = first_index(lambda p: p.idx > tile.idx, self)
+
+        if ls_idx == -1:
+            return self._pieces.append(tile)
+
+        return self._pieces.insert(ls_idx, tile)
+
+    def replace(self, p: Piece):
+        """Insert a ``tile`` at the position ``tile.idx`` to replace an
+        existing piece."""
+        self.pop(p.idx)
+        self.insert(p)
+
+    # -- Methods to satisfy Collection ----------------------------------------
+
+    def __len__(self) -> int:
+        return len(self._pieces)
+
+    def __iter__(self) -> Iterator[Piece]:
+        return iter(self._pieces)
+
+    def __getitem__(self, idx: TileIndex) -> Piece:
+        return self._pieces[self._get_list_idx(idx)]
+
+    def __contains__(self, tile: TileIndex) -> bool:
+        try:
+            return self[tile.idx] == tile
+        except IndexError:
+            return False
+
+    def __eq__(self, other: 'Board') -> bool:
+        return self._pieces == other._pieces

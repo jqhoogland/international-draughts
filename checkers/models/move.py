@@ -11,61 +11,59 @@ class InvalidMoveError(ValueError):
 @dataclass
 class Move:
     """A move is essentially a vector pointing from a start tile to an end
-    tile. It's slightly more complicated because we're working with
-    international draughts indexing.
+    tile. It's slightly more complicated than "just a vector" because we're
+    working with international draughts indexing.
 
     .. NOTE:: Actually, I lied: moves in different directions don't necessarily
-       combine into valid moves (though they might combine into valid series of
-       captures).
+       combine to form valid moves (though they might combine into valid series
+       of captures) (closedness is a defining requirement of "vectors").
 
     """
 
     start: TileIndex
     end: TileIndex
 
-    @property
-    def direction(self) -> tuple[Literal[1, -1], Literal[1, -1]]:
+    def unit(self) -> 'Move':
+        """The equivalent of a unit vector for a move. Returns a move in the
+        same direction with length-1 (i.e., one step)."""
+        return self // len(self)
+
+    def __post_init__(self):
         """To compute the "direction" of a move, we treat ``start`` as the origin
         and determine what quadrant ``end`` is in."""
 
         quadrant_unnormed = (row_of(self.end) - row_of(self.start),
                              col_of(self.end) - col_of(self.start))
 
-        return (quadrant_unnormed[0] / (abs(quadrant_unnormed[0]) or 1),
-                quadrant_unnormed[1] / (abs(quadrant_unnormed[1]) or 1))
+        self.direction = (quadrant_unnormed[0] / (abs(quadrant_unnormed[0]) or 1),
+                          quadrant_unnormed[1] / (abs(quadrant_unnormed[1]) or 1))
 
     def __add__(self, other: int) -> 'Move':
         """This is a bit of python magic that lets us override the standard
         ``+`` operation. In this case, we define adding an int to a move as
-        extending the move in the direction of the diagonal pointing from
+        extending the move in the direction of the line pointing from
         start to end.
 
         (This assumes that this a well-formed move.)
         """
-
-        direction = self.direction
-
         return Move(
             self.start,
             floor_tile_index_of(
-                row_of(self.end) + direction[0] * other,
-                col_of(self.end) + direction[1] * other,
-                direction=(-direction[0], -direction[1])
+                row_of(self.end) + self.direction[0] * other,
+                col_of(self.end) + self.direction[1] * other,
+                direction=(-self.direction[0], -self.direction[1])
             )
         )
 
     def __sub__(self, other: int) -> 'Move':
         """See ``__add__``. Subtraction is defined analogously but in the
         direction opposite the move."""
-
-        direction = self.direction
-
         return Move(
             self.start,
             floor_tile_index_of(
-                row_of(self.end) - direction[0] * other,
-                col_of(self.end) - direction[1] * other,
-                direction=direction
+                row_of(self.end) - self.direction[0] * other,
+                col_of(self.end) - self.direction[1] * other,
+                direction=self.direction
             )
         )
 
@@ -80,17 +78,29 @@ class Move:
         return max(row_len, col_len)
 
     def __floordiv__(self, other: int) -> 'Move':
-        """Moves are vectors. We should be able to multiply them.
+        """Moves are vectorish. We should be able to multiply them.
         They're discrete, so we restrict division to floor division."""
-        direction = self.direction
         magnitude = len(self) // other
 
         return Move(
             self.start,
             floor_tile_index_of(
-                row_of(self.start) + direction[0] * magnitude,
-                col_of(self.start) + direction[1] * magnitude,
-                direction=(-direction[0], -direction[1])
+                row_of(self.start) + self.direction[0] * magnitude,
+                col_of(self.start) + self.direction[1] * magnitude,
+                direction=(-self.direction[0], -self.direction[1])
+            )
+        )
+
+    def __mul__(self, other: int):
+        """See __floordiv__. Included for completeness."""
+        magnitude = len(self) * other
+
+        return Move(
+            self.start,
+            floor_tile_index_of(
+                row_of(self.start) + self.direction[0] * magnitude,
+                col_of(self.start) + self.direction[1] * magnitude,
+                direction=(-self.direction[0], -self.direction[1])
             )
         )
 
@@ -100,7 +110,7 @@ class Move:
 
         yield self.start
 
-        step = self // len(self)
+        step = self.unit()
 
         while row_of(step.end) != row_of(self.end) \
                 and col_of(step.end) != col_of(self.end):
