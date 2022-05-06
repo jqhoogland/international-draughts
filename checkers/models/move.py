@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import NamedTuple, Literal, Iterator
+from typing import Literal, Iterator
 
-from checkers.utils import row_of, col_of, tile_index_of, floor_tile_index_of, TileIndex
+from checkers.models.position import row_of, col_of, floor_tile_index_of, TileIndex
 
 
 class InvalidMoveError(ValueError):

@@ -1,8 +1,8 @@
-from checkers.domain import Board, PLAYER_ONE
 from pydantic.types import conlist
 
-from checkers.utils import tile_index_of, TileIndexError
-
+from checkers.models import Board, PLAYER_ONE
+from checkers.models.position import tile_index_of, TileIndexError
+from checkers.utils.stringx import center_text
 
 PLAYER_ONE_NORMAL = "⊂⊃"
 PLAYER_ONE_KING = "⊆⊇"
@@ -41,9 +41,9 @@ def draw_board(board: Board):
 
     for i, player, is_king in sorted(board, key=lambda p: p.idx):
         if player is PLAYER_ONE:
-            piece_reprs[i-1] = PLAYER_ONE_KING if is_king else PLAYER_ONE_NORMAL
+            piece_reprs[i - 1] = PLAYER_ONE_KING if is_king else PLAYER_ONE_NORMAL
         else:
-            piece_reprs[i-1] = PLAYER_TWO_KING if is_king else PLAYER_TWO_NORMAL
+            piece_reprs[i - 1] = PLAYER_TWO_KING if is_king else PLAYER_TWO_NORMAL
 
     return draw_grid(piece_reprs)
 
@@ -52,20 +52,24 @@ def add_edges(board_repr: str):
     """Add labels to the edges of an board.
     """
 
-    top_indices = "  .  .01.  .02.  .03.  .04.  .05.\n"
+    top_indices = " .  .01.  .02.  .03.  .04.  .05. \n "
     bottom_indices = "'46'  '47'  '48'  '49'  '50'  '"
     left_indices = "\n  \n06\n  \n16\n  \n26\n  \n36\n  \n46\n  \n  \n"
     right_indices = "\n05  \n  \n15\n  \n25\n  \n35\n  \n45\n  \n  \n  \n  \n"
 
     split_lines = zip(left_indices.split("\n"), \
-                  (top_indices + board_repr + bottom_indices).split("\n"), \
-                  right_indices.split("\n"))
+                      (top_indices + board_repr + bottom_indices).split("\n"), \
+                      right_indices.split("\n"))
 
     return '\n'.join([l + body + r for l, body, r in split_lines])
 
 
 def draw_board_with_indices(board: Board):
     return add_edges(draw_board(board))
+
+
+def draw_centered_board_with_indices(board: Board, char: str = "", width: int = 80):
+    return center_text(draw_board_with_indices(board), char=char, width=width)
 
 
 def draw_tile_indices():
@@ -89,4 +93,3 @@ if __name__ == "__main__":
     # |36|  |37|  |38|  |39|  |40|  |
     # |  |41|  |42|  |43|  |44|  |45|
     # |46|  |47|  |48|  |49|  |50|  |
-

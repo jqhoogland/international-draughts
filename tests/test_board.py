@@ -1,5 +1,5 @@
-from checkers.domain import Piece, Board, PLAYER_ONE, PLAYER_TWO
-from checkers.utils import floor_tile_index_of
+from checkers.models import Piece, Board, PLAYER_ONE, PLAYER_TWO
+from checkers.models.position import floor_tile_index_of
 
 
 def test_board_pop():

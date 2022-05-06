@@ -1,4 +1,4 @@
-from checkers.io.sample import sample_game_cmd_generator
+from checkers.io.sample_match import sample_game_cmd_generator
 
 
 def test_sample_game():

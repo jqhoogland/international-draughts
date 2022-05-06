@@ -10,9 +10,9 @@ This could use a bit of a refactor:
 
 from typing import Optional
 
-from checkers.domain import Move, Board, Player
-from checkers.domain.move import InvalidMoveError
-from checkers.utils import col_of, row_of, TileIndex
+from checkers.models import Move, Board, Player
+from checkers.models.move import InvalidMoveError
+from checkers.models.position import col_of, row_of, TileIndex
 
 
 def is_x_rows_up(move: Move, *, rows: int = 1) -> bool:
@@ -53,7 +53,7 @@ def is_one_step_forward(board: Board, move: Move) -> bool:
     direction = 1 if board[move.start].player else -1
 
     return is_x_rows_up(move, rows=direction) \
-        and is_x_cols_away(move, cols=1)
+           and is_x_cols_away(move, cols=1)
 
 
 def is_two_steps_away(move: Move) -> bool:
@@ -91,7 +91,7 @@ def is_valid_normal_capture(board: Board, move: Move, *, player: Optional[Player
 
 def is_valid_king_step(board: Board, move: Move) -> bool:
     return (is_diagonal(move) or is_perp(move)) \
-           and all(map(lambda i: not is_occupied(board, i) or i == move.start, move) )
+           and all(map(lambda i: not is_occupied(board, i) or i == move.start, move))
 
 
 def is_valid_king_capture(board: Board, move: Move, *, player: Optional[Player]) -> bool:
@@ -126,7 +126,10 @@ def is_valid_king_capture_series(board: Board, moves: list[Move]) -> bool:
 
     def get_capture(move: Move) -> TileIndex:
         idxs = (p.idx for p in board.pieces)
-        return next(filter(lambda i: i in idxs, move))
+        try:
+            return next(filter(lambda i: i in idxs, move))
+        except StopIteration:
+            return None
 
     for move in moves:
         if not is_valid_king_capture(board, move, player=board[moves[0].start].player) \
@@ -157,4 +160,3 @@ def is_valid_capture_series(board: Board, moves: list[Move]):
 def validate_captures(board: Board, moves: list[Move]):
     if not is_valid_capture_series(board, moves):
         raise InvalidMoveError("This is not a valid step.")
-

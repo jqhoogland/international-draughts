@@ -10,7 +10,6 @@ class TileIndexError(ValueError):
 
 RowIndex = conint(ge=0, lt=10)
 ColIndex = conint(ge=0, lt=10)
-
 TileIndex = conint(ge=1, le=50)
 
 

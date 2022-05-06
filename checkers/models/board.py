@@ -1,13 +1,12 @@
-import re
 from dataclasses import dataclass
 from typing import Optional
 
 from pydantic import validate_arguments
 
-from checkers.domain.move import Move, capture_series_to_moves
-from checkers.domain.piece import Piece
-from checkers.utils import TileIndex
-from checkers.domain.player import PLAYER_ONE, PLAYER_TWO
+from checkers.models.move import Move
+from checkers.models.piece import Piece
+from checkers.models.player import PLAYER_ONE, PLAYER_TWO
+from checkers.models.position import TileIndex
 
 
 class BoardError(ValueError):
@@ -108,4 +107,3 @@ class Board:
 
     def __getitem__(self, idx: TileIndex):
         return self.pieces[self._get_list_idx(idx)]
-

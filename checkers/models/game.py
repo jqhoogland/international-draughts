@@ -2,10 +2,9 @@ import re
 from dataclasses import dataclass
 from typing import Union
 
-from checkers.domain import Move, Board, capture_series_to_moves, Piece
-from checkers.domain.board import InvalidMoveFormat
-from checkers.setup import default_board
-from checkers.validation import validate_step, validate_captures
+from checkers.models import Move, Board, capture_series_to_moves, Piece
+from checkers.models.board import InvalidMoveFormat
+from checkers.rules import validate_step, validate_captures
 
 
 def parse_cmd(cmd) -> Union[Move, list[Move]]:
@@ -34,6 +33,9 @@ class Game:
         return self.board[moves[-1].end]
 
     def play(self, cmd: str):
+        if cmd == "exit":
+            raise StopIteration
+
         move = parse_cmd(cmd)
 
         if isinstance(move, Move):
@@ -44,6 +46,13 @@ class Game:
         if piece.has_reached_end:
             self.board.replace(piece.coronate())
 
+    def play_turn(self, p1_move: str, p2_move: str):
+        self.play(p1_move)
+        self.play(p2_move)
+
     def __init__(self):
         self.board = default_board()
 
+
+def default_board() -> Board:
+    return Board(list(range(31, 51)), list(range(1, 21)))

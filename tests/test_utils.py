@@ -2,7 +2,7 @@
 import itertools
 from contextlib import suppress
 
-from checkers.utils import col_of, row_of, tile_index_of, TileIndexError
+from checkers.models.position import col_of, row_of, tile_index_of, TileIndexError
 
 
 def test_tile_index_to_row_index():

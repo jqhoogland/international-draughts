@@ -1,4 +1,4 @@
-from checkers.domain import Board, Move
+from checkers.models import Board, Move
 
 
 def test_move_addition():
