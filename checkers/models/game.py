@@ -4,7 +4,7 @@ from typing import Union, Optional
 
 from checkers.models import Move, Board, capture_series_to_moves, Piece
 from checkers.models.board import InvalidMoveError
-from checkers.rules import validate_step, validate_captures
+from checkers.logic.rules import validate_step, validate_captures
 
 
 def parse_cmd(cmd) -> Union[Move, list[Move]]:

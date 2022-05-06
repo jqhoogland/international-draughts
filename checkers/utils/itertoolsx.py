@@ -2,8 +2,7 @@
 The standard library has a core module called "itertools", hence the "x" in this
 module of eXtended iteration functions.
 """
-from collections import Callable, Iterable
-from typing import Any, TypeVar, Optional
+from typing import Any, TypeVar, Optional, Callable, Iterable
 
 T = TypeVar("T")
 OneArgPredicate = Callable[[T], bool]

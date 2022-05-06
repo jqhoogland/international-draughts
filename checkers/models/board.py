@@ -1,5 +1,5 @@
 from abc import ABC
-from collections import Collection
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Optional, Iterator
 
@@ -136,3 +136,6 @@ class Board(Collection):
 
     def __eq__(self, other: 'Board') -> bool:
         return self._pieces == other._pieces
+
+    def __hash__(self):
+        return hash(tuple(self._pieces))  # _pieces is always ordered

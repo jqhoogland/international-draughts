@@ -28,6 +28,9 @@ class Move:
         same direction with length-1 (i.e., one step)."""
         return self // len(self)
 
+    def inverse(self) -> 'Move':
+        return Move(self.end, self.start)
+
     def __post_init__(self):
         """To compute the "direction" of a move, we treat ``start`` as the origin
         and determine what quadrant ``end`` is in."""

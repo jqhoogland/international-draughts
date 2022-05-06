@@ -13,6 +13,7 @@ from typing import Optional
 from checkers.models import Move, Board, Player
 from checkers.models.move import InvalidMoveError
 from checkers.models.position import col_of, row_of, TileIndex
+from checkers.utils.itertoolsx import first
 
 
 def is_x_rows_up(move: Move, *, rows: int = 1) -> bool:
@@ -89,6 +90,10 @@ def is_valid_normal_capture(board: Board, move: Move, *, player: Optional[Player
            and not is_occupied(board, move.end)
 
 
+def get_valid_normal_capture(board: Board, move: Move, *, player: Optional[Player] = None) -> TileIndex:
+    return is_valid_normal_capture(board, move, player=player) and (move - 1).end
+
+
 def is_valid_king_step(board: Board, move: Move) -> bool:
     return (is_diagonal(move) or is_perp(move)) \
            and all(map(lambda i: not is_occupied(board, i) or i == move.start, move))
@@ -100,7 +105,12 @@ def is_valid_king_capture(board: Board, move: Move, *, player: Optional[Player] 
 
     return (is_diagonal(move) or is_perp(move)) \
            and all(map(lambda i: not is_occupied(board, i, by=player) or i == move.start, move)) \
-           and sum(map(lambda i: int(is_occupied(board, i, by=not player)), move)) == 1
+           and sum(map(lambda i: is_occupied(board, i, by=not player), move)) == 1
+
+
+def get_valid_king_capture(board: Board,  move: Move, *, player: Optional[Player] = None) -> TileIndex:
+    return is_valid_king_capture(board, move, player=player) \
+           and first(lambda i: is_occupied(board, i, by=not player), move)
 
 
 # -- Capture Series

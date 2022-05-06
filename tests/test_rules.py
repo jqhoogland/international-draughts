@@ -16,7 +16,7 @@ from contextlib import suppress
 
 from checkers.models import Move, Board
 from checkers.models.position import tile_index_of, TileIndexError
-from checkers.rules import is_x_rows_up, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step, \
+from checkers.logic.rules import is_x_rows_up, is_x_cols_away, is_diagonal, is_occupied, is_valid_normal_step, \
     is_valid_normal_capture
 
 

@@ -51,3 +51,19 @@ def col_of(i: TileIndex) -> ColIndex:
 
 def row_col_of(i: TileIndex) -> tuple[RowIndex, ColIndex]:
     return row_of(i), col_of(i)
+
+
+def move_r(i: TileIndex, cols: int) -> TileIndex:
+    return tile_index_of(row_of(i), col_of(i) + cols)
+
+
+def move_u(i: TileIndex, rows: int) -> TileIndex:
+    return tile_index_of(row_of(i) - rows, col_of(i))
+
+
+def move_ur(i: TileIndex, diag: int) -> TileIndex:
+    return tile_index_of(row_of(i) - diag, col_of(i) + diag)
+
+
+def move_dr(i: TileIndex, diag: int) -> TileIndex:
+    return tile_index_of(row_of(i) + diag, col_of(i) + diag)
