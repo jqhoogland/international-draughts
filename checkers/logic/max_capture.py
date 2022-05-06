@@ -21,6 +21,7 @@ from pydantic import ValidationError
 
 from checkers.logic.rules import get_valid_normal_capture, get_valid_king_capture
 from checkers.models import Board, Player, Move, Piece, TileIndex
+from checkers.models.board import InvalidMoveError
 from checkers.models.position import move_ur, move_dr, TileIndexError, move_u, move_r
 
 
@@ -46,10 +47,8 @@ def _generate_captures(
             if capture := get_valid_capture(b, Move(start, end), player=player):
                 yield end, capture
 
-            print("\t", start, f"{move.__name__}({amt}):", end, capture)
         except (TileIndexError, ValidationError):
-            # pass
-            print("\t", start, f"{move.__name__}({amt}):", "XXX")
+            pass
 
 
 _generate_normal_captures = functools.partial(_generate_captures, get_normal_moves, get_valid_normal_capture)
@@ -120,3 +119,9 @@ def compute_max_capture(board: Board, player: Player) -> int:
 
 def is_max_capture(board: Board, moves: list[Move]) -> bool:
     return len(moves) == compute_max_capture(board, board[moves[0].start].player)
+
+
+def validate_max_capture(board: Board, moves: list[Move]):
+    if not is_max_capture(board, moves):
+        plural = len(moves) > 1 or ''
+        raise InvalidMoveError(f"This {plural and 'series of '}capture{plural and 's'} is not maximal.")

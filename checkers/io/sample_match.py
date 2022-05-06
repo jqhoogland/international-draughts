@@ -17,7 +17,7 @@
 """
 import time
 
-from checkers.models.game import Game
+from checkers.game import Game
 from checkers.utils.draw import draw_centered_board_with_indices
 from checkers.utils.stringx import wrap_text, center_multiline, HR
 

@@ -118,7 +118,10 @@ def get_valid_king_capture(board: Board,  move: Move, *, player: Optional[Player
 
 def is_valid_normal_capture_series(board: Board, moves: list[Move]) -> bool:
     """Assumes moves is already validated for continuity. We keep track of a
-    list of captured tiles for recursive calls to avoid capturing the same piece twice."""
+    list of captured tiles for recursive calls to avoid capturing the same piece twice.
+
+    Does not check that this capture series is maximal.
+    """
     captured: list[TileIndex] = []
 
     for move in moves:
@@ -131,7 +134,9 @@ def is_valid_normal_capture_series(board: Board, moves: list[Move]) -> bool:
 
 
 def is_valid_king_capture_series(board: Board, moves: list[Move]) -> bool:
-    """See ``is_valid_normal_capture_series``."""
+    """See ``is_valid_normal_capture_series``.
+    Does not check that this capture series is maximal.
+    """
     captured: list[TileIndex] = []
 
     def get_capture(move: Move) -> TileIndex:
